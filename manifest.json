@@ -1,0 +1,21 @@
+{
+  "name": "Gedeon Richter — Agents IA",
+  "short_name": "GR Agents",
+  "description": "Démo interactive des 7 agents IA recommandés pour Gedeon Richter France",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0E143D",
+  "theme_color": "#0E143D",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

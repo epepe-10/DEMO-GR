@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="theme-color" content="#0E143D">
+<title>Gedeon Richter — Démo Agents IA</title>
+<link rel="manifest" href="/manifest.json">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800;900&display=swap');
+
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --navy:#0E143D;--blue:#2B7DE9;--cyan:#00BCD4;--white:#fff;
+  --gray100:#F8FAFC;--gray200:#E2E8F0;--gray300:#CBD5E1;
+  --gray500:#64748B;--gray700:#334155;--gray900:#0F172A;
+  --green:#10B981;--amber:#F59E0B;--red:#EF4444;--purple:#7C3AED;
+  --radius:12px;--shadow:0 4px 24px rgba(14,20,61,.12);
+}
+html{font-size:16px;scroll-behavior:smooth}
+body{font-family:'Rubik',sans-serif;background:var(--navy);color:var(--white);overflow-x:hidden;-webkit-font-smoothing:antialiased}
+
+/* ═══ ANIMATIONS ═══ */
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+@keyframes slideR{from{transform:translateX(-100%);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes typing{from{width:0}to{width:100%}}
+@keyframes blink{50%{border-color:transparent}}
+@keyframes scan{0%{top:0}100%{top:calc(100% - 3px)}}
+@keyframes progress{from{width:0}to{width:100%}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes glow{0%,100%{box-shadow:0 0 8px var(--cyan)}50%{box-shadow:0 0 24px var(--cyan)}}
+
+.fade-up{animation:fadeUp .5s ease both}
+.fade-in{animation:fadeIn .4s ease both}
+
+/* ═══ SPLASH / HOME ═══ */
+#home{min-height:100vh;display:flex;flex-direction:column;position:relative}
+.home-bg{position:absolute;inset:0;background:linear-gradient(135deg,var(--navy) 0%,#0a1030 40%,#111b52 100%);z-index:0}
+.home-bg::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at 70% 20%,rgba(43,125,233,.15) 0%,transparent 60%),radial-gradient(circle at 20% 80%,rgba(0,188,212,.1) 0%,transparent 50%)}
+.home-content{position:relative;z-index:1;padding:3rem 1.5rem 2rem;flex:1;display:flex;flex-direction:column}
+.home-header{display:flex;align-items:center;gap:.75rem;margin-bottom:3rem}
+.logo-mark{width:36px;height:36px;background:var(--blue);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.1rem;color:var(--white)}
+.logo-text{font-weight:700;font-size:.95rem;letter-spacing:.5px;opacity:.8}
+.home-title{font-size:clamp(2rem,5vw,3rem);font-weight:800;line-height:1.15;margin-bottom:.75rem}
+.home-title span{color:var(--cyan)}
+.home-sub{font-size:1.05rem;color:var(--gray300);line-height:1.6;margin-bottom:2.5rem;max-width:560px}
+
+/* ═══ AXES GRID ═══ */
+.axes-label{font-size:.7rem;text-transform:uppercase;letter-spacing:2px;color:var(--cyan);font-weight:600;margin-bottom:1rem}
+.agents-grid{display:flex;flex-direction:column;gap:.75rem;padding-bottom:2rem}
+.agent-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:var(--radius);padding:1rem 1.15rem;display:flex;align-items:center;gap:1rem;cursor:pointer;transition:all .25s ease;position:relative;overflow:hidden}
+.agent-card:hover,.agent-card:active{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.15);transform:translateX(4px)}
+.agent-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:0 3px 3px 0;transition:background .2s}
+.agent-card[data-axe="prod"]::before{background:var(--blue)}
+.agent-card[data-axe="conf"]::before{background:var(--cyan)}
+.agent-card[data-axe="mkt"]::before{background:var(--purple)}
+.agent-card[data-axe="intel"]::before{background:var(--amber)}
+.agent-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
+.agent-card[data-axe="prod"] .agent-icon{background:rgba(43,125,233,.15)}
+.agent-card[data-axe="conf"] .agent-icon{background:rgba(0,188,212,.15)}
+.agent-card[data-axe="mkt"] .agent-icon{background:rgba(124,58,237,.15)}
+.agent-card[data-axe="intel"] .agent-icon{background:rgba(245,158,11,.15)}
+.agent-card-text{flex:1;min-width:0}
+.agent-card-title{font-weight:600;font-size:.9rem;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.agent-card-desc{font-size:.75rem;color:var(--gray300);line-height:1.4}
+.agent-card-arrow{color:var(--gray500);font-size:.9rem;flex-shrink:0;transition:transform .2s}
+.agent-card:hover .agent-card-arrow{transform:translateX(3px)}
+.axe-divider{font-size:.65rem;text-transform:uppercase;letter-spacing:1.5px;font-weight:600;padding:.5rem 0 .25rem;margin-top:.5rem}
+.axe-divider.prod{color:var(--blue)}.axe-divider.conf{color:var(--cyan)}.axe-divider.mkt{color:var(--purple)}.axe-divider.intel{color:var(--amber)}
+
+/* ═══ DEMO PAGES ═══ */
+.demo-page{display:none;min-height:100vh;flex-direction:column;background:var(--gray100);color:var(--gray900)}
+.demo-page.active{display:flex}
+.demo-header{background:var(--navy);padding:1rem 1.25rem;display:flex;align-items:center;gap:.75rem;position:sticky;top:0;z-index:50}
+.btn-back{background:rgba(255,255,255,.1);border:none;color:var(--white);width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.1rem;transition:background .2s}
+.btn-back:hover{background:rgba(255,255,255,.2)}
+.demo-header-text{flex:1;min-width:0}
+.demo-header-title{font-weight:700;font-size:.95rem;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.demo-header-axe{font-size:.65rem;color:var(--cyan);text-transform:uppercase;letter-spacing:1px}
+.demo-body{flex:1;padding:1.25rem;max-width:640px;margin:0 auto;width:100%}
+
+/* ═══ SHARED DEMO COMPONENTS ═══ */
+.demo-intro{background:var(--white);border-radius:var(--radius);padding:1.25rem;margin-bottom:1rem;box-shadow:var(--shadow)}
+.demo-intro h3{font-size:1rem;font-weight:700;margin-bottom:.5rem;color:var(--navy)}
+.demo-intro p{font-size:.85rem;color:var(--gray500);line-height:1.55}
+.demo-roi{display:flex;gap:.75rem;margin-top:.75rem}
+.roi-badge{background:var(--gray100);border-radius:8px;padding:.5rem .75rem;font-size:.75rem;font-weight:600;color:var(--navy)}
+.roi-badge span{display:block;font-size:.65rem;font-weight:400;color:var(--gray500);margin-top:2px}
+
+.demo-section{background:var(--white);border-radius:var(--radius);padding:1.25rem;margin-bottom:1rem;box-shadow:var(--shadow)}
+.demo-section h4{font-size:.85rem;font-weight:700;color:var(--navy);margin-bottom:.75rem;display:flex;align-items:center;gap:.5rem}
+.demo-section h4 .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+.btn-demo{background:var(--blue);color:var(--white);border:none;border-radius:8px;padding:.65rem 1.25rem;font-family:'Rubik',sans-serif;font-weight:600;font-size:.85rem;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:.5rem}
+.btn-demo:hover{background:#1a6dd4;transform:translateY(-1px)}
+.btn-demo:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn-demo.outline{background:transparent;border:1.5px solid var(--blue);color:var(--blue)}
+.btn-demo.outline:hover{background:rgba(43,125,233,.08)}
+.btn-demo.green{background:var(--green)}.btn-demo.green:hover{background:#0d9668}
+.btn-demo.sm{padding:.45rem .85rem;font-size:.78rem}
+
+.step-indicator{display:flex;gap:.35rem;margin-bottom:1rem}
+.step-dot{width:24px;height:4px;border-radius:2px;background:var(--gray200);transition:all .3s}
+.step-dot.active{background:var(--blue);width:32px}
+.step-dot.done{background:var(--green)}
+
+/* Chat-like UI */
+.chat-container{display:flex;flex-direction:column;gap:.5rem;margin:.75rem 0}
+.chat-msg{max-width:85%;padding:.65rem .9rem;border-radius:12px;font-size:.82rem;line-height:1.5;animation:fadeUp .3s ease both}
+.chat-msg.user{background:var(--blue);color:var(--white);align-self:flex-end;border-bottom-right-radius:4px}
+.chat-msg.bot{background:var(--white);border:1px solid var(--gray200);color:var(--gray700);align-self:flex-start;border-bottom-left-radius:4px}
+.chat-msg.bot .label{font-size:.65rem;font-weight:600;color:var(--cyan);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+
+/* Data table */
+.mini-table{width:100%;border-collapse:collapse;font-size:.78rem;margin:.75rem 0}
+.mini-table th{background:var(--navy);color:var(--white);padding:.5rem .6rem;text-align:left;font-weight:600;font-size:.7rem;text-transform:uppercase;letter-spacing:.5px}
+.mini-table th:first-child{border-radius:6px 0 0 0}.mini-table th:last-child{border-radius:0 6px 0 0}
+.mini-table td{padding:.5rem .6rem;border-bottom:1px solid var(--gray200);color:var(--gray700)}
+.mini-table tr:last-child td{border-bottom:none}
+.mini-table tr.highlight{background:rgba(239,68,68,.06)}
+.mini-table tr.highlight td{color:var(--red);font-weight:600}
+
+/* Tags & badges */
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:.68rem;font-weight:600}
+.tag.green{background:rgba(16,185,129,.1);color:var(--green)}
+.tag.red{background:rgba(239,68,68,.1);color:var(--red)}
+.tag.amber{background:rgba(245,158,11,.1);color:var(--amber)}
+.tag.blue{background:rgba(43,125,233,.1);color:var(--blue)}
+.tag.purple{background:rgba(124,58,237,.1);color:var(--purple)}
+
+/* Progress bar */
+.progress-bar{height:6px;background:var(--gray200);border-radius:3px;overflow:hidden;margin:.5rem 0}
+.progress-fill{height:100%;border-radius:3px;transition:width .8s ease}
+
+/* Typing indicator */
+.typing-dots{display:inline-flex;gap:3px;padding:4px 0}
+.typing-dots span{width:5px;height:5px;border-radius:50%;background:var(--gray500);animation:pulse 1s infinite}
+.typing-dots span:nth-child(2){animation-delay:.15s}
+.typing-dots span:nth-child(3){animation-delay:.3s}
+
+/* Diff view */
+.diff-block{font-family:'Courier New',monospace;font-size:.75rem;line-height:1.7;padding:.75rem;background:var(--gray100);border-radius:8px;margin:.5rem 0;overflow-x:auto}
+.diff-block .del{background:rgba(239,68,68,.12);color:var(--red);text-decoration:line-through;padding:1px 3px;border-radius:2px}
+.diff-block .add{background:rgba(16,185,129,.12);color:var(--green);padding:1px 3px;border-radius:2px}
+
+/* Score gauge */
+.gauge-row{display:flex;align-items:center;gap:.75rem;margin:.4rem 0}
+.gauge-label{font-size:.78rem;width:100px;flex-shrink:0;color:var(--gray700)}
+.gauge-bar{flex:1;height:8px;background:var(--gray200);border-radius:4px;overflow:hidden}
+.gauge-fill{height:100%;border-radius:4px;transition:width 1s ease}
+.gauge-val{font-size:.78rem;font-weight:600;width:36px;text-align:right}
+
+/* Scan animation */
+.scan-area{position:relative;border:2px solid var(--blue);border-radius:8px;padding:1rem;min-height:120px;overflow:hidden}
+.scan-line{position:absolute;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);animation:scan 2s ease-in-out infinite}
+
+/* Card grid */
+.card-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin:.75rem 0}
+.card-grid .card{background:var(--gray100);border-radius:8px;padding:.65rem;text-align:center}
+.card-grid .card .num{font-size:1.5rem;font-weight:800;color:var(--navy)}
+.card-grid .card .lbl{font-size:.65rem;color:var(--gray500);margin-top:2px}
+
+/* Sentiment bars */
+.sentiment-row{display:flex;align-items:center;gap:.5rem;margin:.35rem 0;font-size:.78rem}
+.sentiment-emoji{font-size:1rem;width:24px;text-align:center}
+.sentiment-bar{flex:1;height:10px;border-radius:5px;overflow:hidden;background:var(--gray200)}
+.sentiment-fill{height:100%;border-radius:5px;transition:width 1.2s ease}
+.sentiment-pct{width:36px;text-align:right;font-weight:600;font-size:.75rem}
+
+/* Responsive */
+@media(min-width:640px){
+  .home-content{padding:4rem 3rem 2rem}
+  .demo-body{padding:1.5rem 2rem}
+  .agents-grid{max-width:560px}
+}
+@media(min-width:768px){
+  .card-grid{grid-template-columns:repeat(4,1fr)}
+}
+
+/* PWA install banner */
+.pwa-banner{background:var(--blue);color:var(--white);padding:.6rem 1rem;text-align:center;font-size:.78rem;display:none;cursor:pointer}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ HOME ═══════════════ -->
+<div id="home">
+  <div class="home-bg"></div>
+  <div class="home-content">
+    <div class="home-header fade-up">
+      <div class="logo-mark">A</div>
+      <div class="logo-text">AI PARTNERS × GEDEON RICHTER</div>
+    </div>
+    <h1 class="home-title fade-up" style="animation-delay:.1s">Agents IA<br><span>Démo interactive</span></h1>
+    <p class="home-sub fade-up" style="animation-delay:.2s">Découvrez en simulation les 7 agents recommandés pour Gedeon Richter France. Chaque démo illustre concrètement ce que l'agent fait au quotidien.</p>
+    
+    <div class="agents-grid fade-up" style="animation-delay:.3s">
+      <div class="axe-divider prod">⚡ Productivité & automatisation</div>
+      <div class="agent-card" data-axe="prod" onclick="openDemo('audit')">
+        <div class="agent-icon">📊</div>
+        <div class="agent-card-text">
+          <div class="agent-card-title">Audit Coûts Logistiques</div>
+          <div class="agent-card-desc">Croisement factures × grilles tarifaires</div>
+        </div>
+        <div class="agent-card-arrow">→</div>
+      </div>
+      <div class="agent-card" data-axe="prod" onclick="openDemo('regate')">
+        <div class="agent-icon">💰</div>
+        <div class="agent-card-text">
+          <div class="agent-card-title">Automatisation Budget REGATE</div>
+          <div class="agent-card-desc">Extraction et injection automatique</div>
+        </div>
+        <div class="agent-card-arrow">→</div>
+      </div>
+      
+      <div class="axe-divider conf">🛡️ Conformité & réglementaire</div>
+      <div class="agent-card" data-axe="conf" onclick="openDemo('conformite')">
+        <div class="agent-icon">✅</div>
+        <div class="agent-card-text">
+          <div class="agent-card-title">Assistant Conformité LEM/HAS</div>
+          <div class="agent-card-desc">Check-lists dynamiques & recherche documentaire</div>
+        </div>
+        <div class="agent-card-arrow">→</div>
+      </div>
+      <div class="agent-card" data-axe="conf" onclick="openDemo('amm')">
+        <div class="agent-icon">🔄</div>
+        <div class="agent-card-text">
+          <div class="agent-card-title">Traduction AMM Automatisée</div>
+          <div class="agent-card-desc">Diff + traduction + analyse d'impact aval</div>
+        </div>
+        <div class="agent-card-arrow">→</div>
+      </div>
+      
+      <div class="axe-divider mkt">🎨 Marketing, contenu & visibilité</div>
+      <div class="agent-card" data-axe="mkt" onclick="openDemo('marketing')">
+        <div class="agent-icon">🏭</div>
+        <div class="agent-card-text">
+          <div class="agent-card-title">Marketing AI Factory</div>
+          <div class="agent-card-desc">4 agents : Veille, Content, Social, SEO</div>
+        </div>
+        <div class="agent-card-arrow">→</div>
+      </div>
+      
+      <div class="axe-divider intel">🎯 Intelligence terrain & pilotage</div>
+      <div class="agent-card" data-axe="intel" onclick="openDemo('voc')">
+        <div class="agent-icon">🎙️</div>
+        <div class="agent-card-text">
+          <div class="agent-card-title">Agent Voice of Customer</div>
+          <div class="agent-card-desc">Analyse de sentiment des feedbacks VM</div>
+        </div>
+        <div class="agent-card-arrow">→</div>
+      </div>
+      <div class="agent-card" data-axe="intel" onclick="openDemo('optin')">
+        <div class="agent-icon">📈</div>
+        <div class="agent-card-text">
+          <div class="agent-card-title">Optimisation Taux Opt-in</div>
+          <div class="agent-card-desc">Scoring et priorisation des médecins</div>
+        </div>
+        <div class="agent-card-arrow">→</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ DEMO: AUDIT COÛTS ═══════════════ -->
+<div id="demo-audit" class="demo-page">
+  <div class="demo-header">
+    <button class="btn-back" onclick="goHome()">←</button>
+    <div class="demo-header-text">
+      <div class="demo-header-axe">Productivité & automatisation</div>
+      <div class="demo-header-title">Audit Coûts Logistiques</div>
+    </div>
+  </div>
+  <div class="demo-body">
+    <div class="demo-intro fade-up">
+      <h3>📊 Simulation — Croisement factures × grilles tarifaires</h3>
+      <p>L'agent ingère les factures entrepositaire et les compare ligne à ligne aux grilles contractuelles pour détecter écarts, anomalies et surfacturations.</p>
+      <div class="demo-roi">
+        <div class="roi-badge">20-50K€/an<span>Économie potentielle</span></div>
+        <div class="roi-badge">-90%<span>Temps d'audit</span></div>
+      </div>
+    </div>
+    
+    <div class="demo-section fade-up" style="animation-delay:.1s">
+      <h4><span class="dot" style="background:var(--blue)"></span>Étape 1 — Chargement des factures</h4>
+      <p style="font-size:.82rem;color:var(--gray500);margin-bottom:.75rem">L'agent reçoit la facture entrepositaire du mois et la grille tarifaire en vigueur.</p>
+      <button class="btn-demo" onclick="runAuditDemo()">▶ Lancer l'analyse</button>
+      <div id="audit-results" style="margin-top:1rem"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ DEMO: REGATE ═══════════════ -->
+<div id="demo-regate" class="demo-page">
+  <div class="demo-header">
+    <button class="btn-back" onclick="goHome()">←</button>
+    <div class="demo-header-text">
+      <div class="demo-header-axe">Productivité & automatisation</div>
+      <div class="demo-header-title">Automatisation Budget REGATE</div>
+    </div>
+  </div>
+  <div class="demo-body">
+    <div class="demo-intro fade-up">
+      <h3>💰 Simulation — Injection automatique des factures</h3>
+      <p>L'agent extrait les données depuis Sage (provenant de REGATE), les enrichit avec des tags budget/région/événement, et les injecte dans le modèle Excel de budget.</p>
+      <div class="demo-roi">
+        <div class="roi-badge">~5 j/mois<span>Temps économisé</span></div>
+        <div class="roi-badge">-80%<span>Erreurs de saisie</span></div>
+      </div>
+    </div>
+    
+    <div class="demo-section fade-up" style="animation-delay:.1s">
+      <h4><span class="dot" style="background:var(--blue)"></span>Pipeline — Export Sage → Budget Excel</h4>
+      <p style="font-size:.82rem;color:var(--gray500);margin-bottom:.75rem">Voyez comment l'agent transforme 5 jours de saisie en un processus automatisé.</p>
+      <button class="btn-demo" onclick="runRegateDemo()">▶ Simuler le pipeline</button>
+      <div id="regate-results" style="margin-top:1rem"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ DEMO: CONFORMITÉ ═══════════════ -->
+<div id="demo-conformite" class="demo-page">
+  <div class="demo-header">
+    <button class="btn-back" onclick="goHome()">←</button>
+    <div class="demo-header-text">
+      <div class="demo-header-axe">Conformité & réglementaire</div>
+      <div class="demo-header-title">Assistant Conformité LEM/HAS</div>
+    </div>
+  </div>
+  <div class="demo-body">
+    <div class="demo-intro fade-up">
+      <h3>✅ Simulation — Recherche documentaire intelligente</h3>
+      <p>L'assistant est connecté aux textes du LEM et au référentiel HAS (43 prérequis). Posez une question en langage naturel, il pointe les preuves attendues et génère une check-list.</p>
+      <div class="demo-roi">
+        <div class="roi-badge">-60%<span>Temps prépa audit</span></div>
+        <div class="roi-badge">~0<span>Risque d'oubli</span></div>
+      </div>
+    </div>
+    
+    <div class="demo-section fade-up" style="animation-delay:.1s">
+      <h4><span class="dot" style="background:var(--cyan)"></span>Interrogez l'assistant</h4>
+      <div class="chat-container" id="conformite-chat">
+        <div class="chat-msg bot"><div class="label">Assistant LEM/HAS</div>Bonjour ! Je suis connecté aux 1,18 TO de documents et aux référentiels LEM et HAS. Que souhaitez-vous vérifier ?</div>
+      </div>
+      <div style="display:flex;gap:.5rem">
+        <button class="btn-demo sm outline" onclick="askConformite('pharmacovigilance')">Preuves pharmacovigilance</button>
+        <button class="btn-demo sm outline" onclick="askConformite('formation')">Suivi formations</button>
+      </div>
+      <div style="margin-top:.5rem">
+        <button class="btn-demo sm outline" onclick="askConformite('checklist')">Générer check-list audit</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ DEMO: AMM ═══════════════ -->
+<div id="demo-amm" class="demo-page">
+  <div class="demo-header">
+    <button class="btn-back" onclick="goHome()">←</button>
+    <div class="demo-header-text">
+      <div class="demo-header-axe">Conformité & réglementaire</div>
+      <div class="demo-header-title">Traduction AMM Automatisée</div>
+    </div>
+  </div>
+  <div class="demo-body">
+    <div class="demo-intro fade-up">
+      <h3>🔄 Simulation — Diff + traduction d'un RCP</h3>
+      <p>L'agent compare deux versions du RCP anglais, isole les passages modifiés, propose une traduction alignée sur le style français existant, et identifie les documents marketing impactés.</p>
+      <div class="demo-roi">
+        <div class="roi-badge">-70%<span>Temps par AMM</span></div>
+        <div class="roi-badge">5-20 cas/an<span>× 2-3 jours chacun</span></div>
+      </div>
+    </div>
+    
+    <div class="demo-section fade-up" style="animation-delay:.1s">
+      <h4><span class="dot" style="background:var(--cyan)"></span>Étape 1 — Diff automatique entre versions</h4>
+      <p style="font-size:.82rem;color:var(--gray500);margin-bottom:.75rem">L'agent détecte les passages modifiés dans la nouvelle version anglaise du RCP.</p>
+      <button class="btn-demo" onclick="runAmmDemo()">▶ Analyser le RCP</button>
+      <div id="amm-results" style="margin-top:1rem"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ DEMO: MARKETING ═══════════════ -->
+<div id="demo-marketing" class="demo-page">
+  <div class="demo-header">
+    <button class="btn-back" onclick="goHome()">←</button>
+    <div class="demo-header-text">
+      <div class="demo-header-axe">Marketing, contenu & visibilité</div>
+      <div class="demo-header-title">Marketing AI Factory</div>
+    </div>
+  </div>
+  <div class="demo-body">
+    <div class="demo-intro fade-up">
+      <h3>🏭 Suite intégrée — 4 agents marketing</h3>
+      <p>Veille concurrentielle, Content Factory, Social Listening et Visibilité Digitale (SEO/GEO). Explorez chaque agent.</p>
+      <div class="demo-roi">
+        <div class="roi-badge">-80%<span>Temps de veille</span></div>
+        <div class="roi-badge">-40%<span>Coûts agence</span></div>
+        <div class="roi-badge">×3<span>Trafic SEO visé</span></div>
+      </div>
+    </div>
+    
+    <div id="mkt-tabs" style="display:flex;gap:.35rem;margin-bottom:1rem;flex-wrap:wrap">
+      <button class="btn-demo sm" onclick="showMktTab('veille')" id="tab-veille">🔍 Veille</button>
+      <button class="btn-demo sm outline" onclick="showMktTab('content')" id="tab-content">✍️ Content</button>
+      <button class="btn-demo sm outline" onclick="showMktTab('social')" id="tab-social">📡 Social</button>
+      <button class="btn-demo sm outline" onclick="showMktTab('seo')" id="tab-seo">🌐 SEO</button>
+    </div>
+    
+    <div id="mkt-veille" class="demo-section fade-in">
+      <h4><span class="dot" style="background:var(--purple)"></span>Agent Veille Concurrentielle</h4>
+      <p style="font-size:.82rem;color:var(--gray500);margin-bottom:.75rem">Web scraping + analyse sémantique. Monitoring en temps réel des sites concurrents, prix, et nouvelles sorties produits.</p>
+      <button class="btn-demo sm" onclick="runVeilleDemo()">▶ Lancer un scan</button>
+      <div id="veille-results" style="margin-top:.75rem"></div>
+    </div>
+    
+    <div id="mkt-content" class="demo-section" style="display:none">
+      <h4><span class="dot" style="background:var(--purple)"></span>Agent Content Factory</h4>
+      <p style="font-size:.82rem;color:var(--gray500);margin-bottom:.75rem">IA Générative entraînée sur la charte Gedeon Richter pour rédiger des premiers jets et générer des illustrations.</p>
+      <button class="btn-demo sm" onclick="runContentDemo()">▶ Générer un post LinkedIn</button>
+      <div id="content-results" style="margin-top:.75rem"></div>
+    </div>
+    
+    <div id="mkt-social" class="demo-section" style="display:none">
+      <h4><span class="dot" style="background:var(--purple)"></span>Agent Social Listening</h4>
+      <p style="font-size:.82rem;color:var(--gray500);margin-bottom:.75rem">Analyse de sentiment sur les réseaux sociaux autour des hormones et de la fertilité. Détection des influenceurs à risque.</p>
+      <button class="btn-demo sm" onclick="runSocialDemo()">▶ Analyser les tendances</button>
+      <div id="social-results" style="margin-top:.75rem"></div>
+    </div>
+    
+    <div id="mkt-seo" class="demo-section" style="display:none">
+      <h4><span class="dot" style="background:var(--purple)"></span>Agent Visibilité Digitale (SEO/GEO)</h4>
+      <p style="font-size:.82rem;color:var(--gray500);margin-bottom:.75rem">Rédaction SEO + optimisation pour les moteurs IA (GEO). Monitoring de la visibilité dans ChatGPT, Perplexity, Gemini.</p>
+      <button class="btn-demo sm" onclick="runSeoDemo()">▶ Audit de visibilité</button>
+      <div id="seo-results" style="margin-top:.75rem"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ DEMO: VOICE OF CUSTOMER ═══════════════ -->
+<div id="demo-voc" class="demo-page">
+  <div class="demo-header">
+    <button class="btn-back" onclick="goHome()">←</button>
+    <div class="demo-header-text">
+      <div class="demo-header-axe">Intelligence terrain & pilotage</div>
+      <div class="demo-header-title">Agent Voice of Customer</div>
+    </div>
+  </div>
+  <div class="demo-body">
+    <div class="demo-intro fade-up">
+      <h3>🎙️ Simulation — Analyse des feedbacks VM</h3>
+      <p>L'agent traite les comptes-rendus des 21 visiteurs médicaux depuis le CRM OCE, extrait les verbatims clés, les objections récurrentes et les tendances de prescription.</p>
+      <div class="demo-roi">
+        <div class="roi-badge">Immédiat<span>Accès aux insights</span></div>
+        <div class="roi-badge">21 VM<span>× ~10 visites/jour</span></div>
+      </div>
+    </div>
+    
+    <div class="demo-section fade-up" style="animation-delay:.1s">
+      <h4><span class="dot" style="background:var(--amber)"></span>Analyse de la semaine — 147 comptes-rendus</h4>
+      <button class="btn-demo" onclick="runVocDemo()">▶ Analyser les verbatims</button>
+      <div id="voc-results" style="margin-top:1rem"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ DEMO: OPT-IN ═══════════════ -->
+<div id="demo-optin" class="demo-page">
+  <div class="demo-header">
+    <button class="btn-back" onclick="goHome()">←</button>
+    <div class="demo-header-text">
+      <div class="demo-header-axe">Intelligence terrain & pilotage</div>
+      <div class="demo-header-title">Optimisation Taux Opt-in</div>
+    </div>
+  </div>
+  <div class="demo-body">
+    <div class="demo-intro fade-up">
+      <h3>📈 Simulation — Scoring des médecins non opt-in</h3>
+      <p>L'agent analyse les 5 000 médecins non opt-in, génère un scoring de probabilité de conversion et produit pour chaque VM une liste priorisée avec argumentaire personnalisé.</p>
+      <div class="demo-roi">
+        <div class="roi-badge">29% → 50-60%<span>Taux opt-in cible</span></div>
+        <div class="roi-badge">×2<span>Portée campagnes digitales</span></div>
+      </div>
+    </div>
+    
+    <div class="demo-section fade-up" style="animation-delay:.1s">
+      <h4><span class="dot" style="background:var(--amber)"></span>Scoring IA — Top médecins à convertir</h4>
+      <p style="font-size:.82rem;color:var(--gray500);margin-bottom:.75rem">Sélectionnez un VM pour voir sa liste priorisée.</p>
+      <div style="display:flex;gap:.35rem;flex-wrap:wrap">
+        <button class="btn-demo sm" onclick="runOptinDemo('Martin')">VM — S. Martin</button>
+        <button class="btn-demo sm outline" onclick="runOptinDemo('Duval')">VM — C. Duval</button>
+        <button class="btn-demo sm outline" onclick="runOptinDemo('Lopez')">VM — A. Lopez</button>
+      </div>
+      <div id="optin-results" style="margin-top:1rem"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════ NAVIGATION ═══════════════
+function openDemo(id) {
+  document.getElementById('home').style.display = 'none';
+  document.getElementById('demo-' + id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+function goHome() {
+  document.querySelectorAll('.demo-page').forEach(p => p.classList.remove('active'));
+  document.getElementById('home').style.display = 'flex';
+  window.scrollTo(0, 0);
+}
+
+// ═══════════════ HELPERS ═══════════════
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+function typing(el) { el.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>'; }
+
+// ═══════════════ AUDIT COÛTS LOGISTIQUES ═══════════════
+async function runAuditDemo() {
+  const el = document.getElementById('audit-results');
+  typing(el);
+  await delay(1200);
+  
+  el.innerHTML = `
+    <div class="scan-area fade-up">
+      <div class="scan-line"></div>
+      <p style="font-size:.78rem;color:var(--gray500);text-align:center;padding:1.5rem 0">🔍 Croisement en cours — 347 lignes de facture × grille tarifaire...</p>
+    </div>
+  `;
+  await delay(2500);
+  
+  el.innerHTML = `
+    <div class="card-grid fade-up">
+      <div class="card"><div class="num">347</div><div class="lbl">Lignes analysées</div></div>
+      <div class="card"><div class="num" style="color:var(--red)">12</div><div class="lbl">Anomalies détectées</div></div>
+      <div class="card"><div class="num" style="color:var(--amber)">4 820€</div><div class="lbl">Écarts identifiés</div></div>
+      <div class="card"><div class="num" style="color:var(--green)">96.5%</div><div class="lbl">Lignes conformes</div></div>
+    </div>
+    <div style="margin-top:.75rem">
+      <h4 style="font-size:.82rem;font-weight:700;color:var(--navy);margin-bottom:.5rem">🚨 Anomalies prioritaires</h4>
+      <table class="mini-table">
+        <tr><th>Type</th><th>Détail</th><th>Écart</th><th>Statut</th></tr>
+        <tr class="highlight"><td>Transport froid</td><td>Tarif appliqué : 18,50€ vs. contrat : 14,20€</td><td>+1 290€</td><td><span class="tag red">Critique</span></td></tr>
+        <tr class="highlight"><td>Picking</td><td>Facturation double sur lot #GR-2026-0847</td><td>+892€</td><td><span class="tag red">Critique</span></td></tr>
+        <tr><td>Stockage</td><td>Palettes frigo : 23 vs. 19 déclarées</td><td>+640€</td><td><span class="tag amber">À vérifier</span></td></tr>
+        <tr><td>Destruction</td><td>Lot périmé #3291 — imputation casse au lieu de péremption</td><td>+480€</td><td><span class="tag amber">Reclasser</span></td></tr>
+        <tr><td>Réception</td><td>3 lignes sans référence contractuelle</td><td>+318€</td><td><span class="tag amber">À vérifier</span></td></tr>
+      </table>
+      <p style="font-size:.78rem;color:var(--gray500);margin-top:.75rem">💡 <strong>Recommandation :</strong> Les 2 premières anomalies représentent 2 182€. Base factuelle immédiate pour renégociation avec l'entrepositaire.</p>
+    </div>
+  `;
+}
+
+// ═══════════════ AUTOMATISATION REGATE ═══════════════
+async function runRegateDemo() {
+  const el = document.getElementById('regate-results');
+  const steps = [
+    { label: 'Export Sage en cours...', pct: 20 },
+    { label: 'Extraction de 68 factures REGATE...', pct: 40 },
+    { label: 'Enrichissement IA — tags budget, région, événement...', pct: 65 },
+    { label: 'Injection dans le modèle Excel...', pct: 85 },
+    { label: 'Contrôles de cohérence & rapprochement forecast/réalisé...', pct: 100 },
+  ];
+  
+  for (let i = 0; i < steps.length; i++) {
+    el.innerHTML = `
+      <div class="step-indicator">${steps.map((_, j) => `<div class="step-dot ${j < i ? 'done' : j === i ? 'active' : ''}"></div>`).join('')}</div>
+      <p style="font-size:.82rem;color:var(--gray700);margin-bottom:.5rem">${steps[i].label}</p>
+      <div class="progress-bar"><div class="progress-fill" style="width:${steps[i].pct}%;background:var(--blue)"></div></div>
+    `;
+    await delay(1200);
+  }
+  
+  el.innerHTML += `
+    <div style="margin-top:1rem" class="fade-up">
+      <div class="card-grid">
+        <div class="card"><div class="num">68</div><div class="lbl">Factures traitées</div></div>
+        <div class="card"><div class="num" style="color:var(--green)">64</div><div class="lbl">Injectées OK</div></div>
+        <div class="card"><div class="num" style="color:var(--amber)">3</div><div class="lbl">À valider</div></div>
+        <div class="card"><div class="num" style="color:var(--red)">1</div><div class="lbl">Rejetée</div></div>
+      </div>
+      <table class="mini-table" style="margin-top:.75rem">
+        <tr><th>Facture</th><th>Fournisseur</th><th>Montant</th><th>Tags IA</th><th>Statut</th></tr>
+        <tr><td>#R-2026-412</td><td>Hôtel Marriott Lyon</td><td>3 420€</td><td><span class="tag blue">Événement</span> <span class="tag purple">Région 2</span></td><td><span class="tag green">✓</span></td></tr>
+        <tr><td>#R-2026-413</td><td>Agence MediaPharma</td><td>8 900€</td><td><span class="tag blue">Congrès</span> <span class="tag purple">National</span></td><td><span class="tag green">✓</span></td></tr>
+        <tr><td>#R-2026-415</td><td>Traiteur DuParc</td><td>1 850€</td><td><span class="tag amber">?</span></td><td><span class="tag amber">Aucun budget match</span></td></tr>
+      </table>
+      <p style="font-size:.78rem;color:var(--gray500);margin-top:.75rem">⏱️ <strong>Temps total :</strong> 45 secondes vs. ~5 jours de saisie manuelle. Rapprochement forecast/réalisé : écart global de 2,3% — dans la tolérance.</p>
+    </div>
+  `;
+}
+
+// ═══════════════ CONFORMITÉ LEM/HAS ═══════════════
+const conformiteResponses = {
+  pharmacovigilance: {
+    q: "Quelles preuves dois-je préparer pour la pharmacovigilance ?",
+    a: `<div class="label">Assistant LEM/HAS</div>
+      <strong>Pharmacovigilance — Preuves attendues (LEM §4.2) :</strong><br><br>
+      ✅ Procédure écrite de déclaration des EI — <span class="tag green">Trouvé</span> <em>PV-PROC-2025-v3.pdf</em><br>
+      ✅ Registre des EI déclarés (12 derniers mois) — <span class="tag green">Trouvé</span> <em>registre_EI_2025.xlsx</em><br>
+      ⚠️ Preuve de formation des VM à la pharmacovigilance — <span class="tag amber">Expiré le 15/09/2025</span><br>
+      ❌ Convention avec le CRPV référent — <span class="tag red">Non trouvé</span><br><br>
+      <strong>Action requise :</strong> Renouveler la formation VM et localiser la convention CRPV.`
+  },
+  formation: {
+    q: "Où en est le suivi des formations obligatoires ?",
+    a: `<div class="label">Assistant LEM/HAS</div>
+      <strong>Suivi formations — Référentiel HAS, prérequis #12 à #17 :</strong><br><br>
+      <div class="gauge-row"><span class="gauge-label">VM terrain</span><div class="gauge-bar"><div class="gauge-fill" style="width:85%;background:var(--green)"></div></div><span class="gauge-val">85%</span></div>
+      <div class="gauge-row"><span class="gauge-label">MSL</span><div class="gauge-bar"><div class="gauge-fill" style="width:100%;background:var(--green)"></div></div><span class="gauge-val">100%</span></div>
+      <div class="gauge-row"><span class="gauge-label">Marketing</span><div class="gauge-bar"><div class="gauge-fill" style="width:60%;background:var(--amber)"></div></div><span class="gauge-val">60%</span></div>
+      <div class="gauge-row"><span class="gauge-label">Managers</span><div class="gauge-bar"><div class="gauge-fill" style="width:33%;background:var(--red)"></div></div><span class="gauge-val">33%</span></div>
+      <br>⚠️ <strong>3 VM</strong> n'ont pas renouvelé leur certification charte. <strong>2 managers</strong> en retard sur la formation Europharma Q1.`
+  },
+  checklist: {
+    q: "Génère une check-list pour l'audit annuel HAS",
+    a: `<div class="label">Assistant LEM/HAS</div>
+      <strong>Check-list audit HAS — 43 prérequis</strong><br>
+      <em>Générée le 30/03/2026</em><br><br>
+      ✅ 1. Engagement de la direction <span class="tag green">OK</span><br>
+      ✅ 2. Désignation du pharmacien responsable <span class="tag green">OK</span><br>
+      ⚠️ 3. Plan de formation annuel <span class="tag amber">Incomplet — 3 attestations manquantes</span><br>
+      ✅ 4. Procédure d'information médicale <span class="tag green">OK</span><br>
+      ❌ 5. Suivi des engagements post-visite <span class="tag red">Document non trouvé dans l'arborescence</span><br>
+      ✅ 6-11. Qualification des intervenants <span class="tag green">OK</span><br>
+      ⚠️ 12. Évaluation des connaissances <span class="tag amber">Quiz Europharma — 2 résultats manquants</span><br>
+      ...<br><br>
+      📊 <strong>Synthèse : 34/43 conformes, 6 à compléter, 3 non trouvés.</strong><br>
+      📁 Localisation : <em>//NAS/Qualite/Audits/2026/</em>`
+  }
+};
+
+function askConformite(key) {
+  const chat = document.getElementById('conformite-chat');
+  const r = conformiteResponses[key];
+  chat.innerHTML += `<div class="chat-msg user fade-up">${r.q}</div>`;
+  chat.innerHTML += `<div class="chat-msg bot fade-up"><div class="typing-dots"><span></span><span></span><span></span></div></div>`;
+  chat.scrollIntoView({behavior:'smooth',block:'end'});
+  setTimeout(() => {
+    const msgs = chat.querySelectorAll('.chat-msg');
+    msgs[msgs.length-1].innerHTML = r.a;
+  }, 1500);
+}
+
+// ═══════════════ TRADUCTION AMM ═══════════════
+async function runAmmDemo() {
+  const el = document.getElementById('amm-results');
+  typing(el);
+  await delay(1500);
+  
+  el.innerHTML = `
+    <div class="fade-up">
+      <p style="font-size:.78rem;color:var(--gray500);margin-bottom:.5rem"><strong>RCP Slinda® — Diff v4.2 → v4.3 (anglais)</strong></p>
+      <div class="diff-block">
+        <strong>Section 4.4 — Special warnings:</strong><br>
+        Patients with a history of <span class="del">thromboembolic events</span><span class="add">venous or arterial thromboembolic events, including deep vein thrombosis, pulmonary embolism, and cerebrovascular events</span> should be carefully monitored.<br><br>
+        <strong>Section 4.8 — Undesirable effects:</strong><br>
+        Common: headache, <span class="add">mood changes (including depressed mood),</span> nausea, acne.<br>
+        <span class="add">Frequency not known: hypersensitivity reactions including angioedema.</span>
+      </div>
+    </div>
+  `;
+  await delay(500);
+  
+  el.innerHTML += `
+    <div class="fade-up" style="margin-top:1rem">
+      <h4 style="font-size:.82rem;font-weight:700;color:var(--navy);margin-bottom:.5rem">🔤 Étape 2 — Traduction alignée sur le style français</h4>
+      <div class="diff-block">
+        <strong>Section 4.4 :</strong><br>
+        Les patientes présentant des antécédents <span class="del">d'événements thromboemboliques</span><span class="add">d'événements thromboemboliques veineux ou artériels, incluant thrombose veineuse profonde, embolie pulmonaire et événements cérébrovasculaires</span> doivent être surveillées attentivement.<br><br>
+        <strong>Section 4.8 :</strong><br>
+        Fréquents : céphalées, <span class="add">troubles de l'humeur (y compris humeur dépressive),</span> nausées, acné.<br>
+        <span class="add">Fréquence indéterminée : réactions d'hypersensibilité incluant angioedème.</span>
+      </div>
+    </div>
+  `;
+  await delay(500);
+  
+  el.innerHTML += `
+    <div class="fade-up" style="margin-top:1rem">
+      <h4 style="font-size:.82rem;font-weight:700;color:var(--navy);margin-bottom:.5rem">📋 Étape 3 — Documents marketing impactés</h4>
+      <table class="mini-table">
+        <tr><th>Document</th><th>Section impactée</th><th>Priorité</th></tr>
+        <tr><td>Brochure Slinda® pharmacien</td><td>Mises en garde</td><td><span class="tag red">Haute</span></td></tr>
+        <tr><td>Aide de visite VM — Tolérance</td><td>Effets indésirables</td><td><span class="tag red">Haute</span></td></tr>
+        <tr><td>FAQ HCP — Effets secondaires</td><td>Réponse type #7 et #12</td><td><span class="tag amber">Moyenne</span></td></tr>
+        <tr><td>Site web — Page Slinda®</td><td>Section sécurité</td><td><span class="tag amber">Moyenne</span></td></tr>
+      </table>
+      <p style="font-size:.78rem;color:var(--gray500);margin-top:.5rem">⏱️ Temps estimé : <strong>35 minutes</strong> (vs. 2-3 jours en traitement manuel)</p>
+    </div>
+  `;
+}
+
+// ═══════════════ MARKETING AI FACTORY ═══════════════
+function showMktTab(tab) {
+  ['veille','content','social','seo'].forEach(t => {
+    document.getElementById('mkt-'+t).style.display = t===tab?'block':'none';
+    document.getElementById('tab-'+t).className = t===tab?'btn-demo sm':'btn-demo sm outline';
+  });
+}
+
+async function runVeilleDemo() {
+  const el = document.getElementById('veille-results');
+  typing(el);
+  await delay(2000);
+  el.innerHTML = `
+    <div class="fade-up">
+      <p style="font-size:.7rem;text-transform:uppercase;letter-spacing:1px;color:var(--purple);font-weight:600;margin-bottom:.5rem">🔍 Scan concurrentiel — 27/03/2026</p>
+      <table class="mini-table">
+        <tr><th>Concurrent</th><th>Signal détecté</th><th>Impact</th></tr>
+        <tr><td>Bayer (Mirena®)</td><td>Nouveau spot TV sur la contraception longue durée</td><td><span class="tag red">Élevé</span></td></tr>
+        <tr><td>Theramex</td><td>Lancement d'un générique DIU hormonal — prix -25%</td><td><span class="tag red">Élevé</span></td></tr>
+        <tr><td>Organon</td><td>Publication d'une étude Phase 4 sur Nexplanon®</td><td><span class="tag amber">Moyen</span></td></tr>
+        <tr><td>HRA Pharma</td><td>Partenariat influenceuse santé féminine (450K abonnés)</td><td><span class="tag amber">Moyen</span></td></tr>
+      </table>
+      <p style="font-size:.78rem;color:var(--gray500);margin-top:.5rem">⚡ <strong>Alerte prioritaire :</strong> Le générique Theramex pourrait impacter les parts de marché sur le segment DIU. Recommandation : activer le messaging « innovation brevetée » auprès des gynécologues.</p>
+    </div>
+  `;
+}
+
+async function runContentDemo() {
+  const el = document.getElementById('content-results');
+  typing(el);
+  await delay(2000);
+  el.innerHTML = `
+    <div class="fade-up" style="background:var(--gray100);border-radius:8px;padding:1rem;border-left:3px solid var(--purple)">
+      <p style="font-size:.7rem;color:var(--purple);font-weight:600;margin-bottom:.5rem">📝 DRAFT — Post LinkedIn Gedeon Richter France</p>
+      <p style="font-size:.85rem;color:var(--gray700);line-height:1.6">
+        🔬 <strong>Endométriose : quand la recherche change la donne.</strong><br><br>
+        En France, 1 femme sur 10 est touchée. Le délai moyen de diagnostic reste de 7 ans.<br><br>
+        Chez Gedeon Richter, nous investissons dans des solutions thérapeutiques qui placent les patientes au cœur de l'innovation. Parce que chaque année gagnée sur l'errance diagnostique, c'est une vie transformée.<br><br>
+        #Endométriose #SantéFéminine #Innovation #GedeonRichter
+      </p>
+      <div style="margin-top:.75rem;display:flex;gap:.5rem">
+        <span class="tag green">Charte respectée</span>
+        <span class="tag blue">Ton : institutionnel</span>
+        <span class="tag purple">Cible : HCP + grand public</span>
+      </div>
+    </div>
+  `;
+}
+
+async function runSocialDemo() {
+  const el = document.getElementById('social-results');
+  typing(el);
+  await delay(1800);
+  el.innerHTML = `
+    <div class="fade-up">
+      <p style="font-size:.78rem;font-weight:600;color:var(--navy);margin-bottom:.75rem">📡 Analyse de sentiment — 7 derniers jours — « hormones + contraception »</p>
+      <div class="sentiment-row"><span class="sentiment-emoji">😊</span><span style="flex-shrink:0;width:55px;color:var(--gray500)">Positif</span><div class="sentiment-bar"><div class="sentiment-fill" style="width:35%;background:var(--green)"></div></div><span class="sentiment-pct" style="color:var(--green)">35%</span></div>
+      <div class="sentiment-row"><span class="sentiment-emoji">😐</span><span style="flex-shrink:0;width:55px;color:var(--gray500)">Neutre</span><div class="sentiment-bar"><div class="sentiment-fill" style="width:40%;background:var(--gray500)"></div></div><span class="sentiment-pct">40%</span></div>
+      <div class="sentiment-row"><span class="sentiment-emoji">😠</span><span style="flex-shrink:0;width:55px;color:var(--gray500)">Négatif</span><div class="sentiment-bar"><div class="sentiment-fill" style="width:25%;background:var(--red)"></div></div><span class="sentiment-pct" style="color:var(--red)">25%</span></div>
+      <div style="margin-top:1rem;padding:.75rem;background:rgba(239,68,68,.05);border-radius:8px;border-left:3px solid var(--red)">
+        <p style="font-size:.78rem;font-weight:600;color:var(--red);margin-bottom:.25rem">🚨 Signal hormonophobie détecté</p>
+        <p style="font-size:.78rem;color:var(--gray700)">Un thread Twitter/X (12K interactions) relaie un article anti-hormones citant nommément les progestatifs. 3 influenceuses « bien-être naturel » l'ont partagé. <strong>Recommandation :</strong> préparer des éléments de réponse scientifique et activer les MSL sur les publications clés.</p>
+      </div>
+    </div>
+  `;
+}
+
+async function runSeoDemo() {
+  const el = document.getElementById('seo-results');
+  typing(el);
+  await delay(2000);
+  el.innerHTML = `
+    <div class="fade-up">
+      <p style="font-size:.78rem;font-weight:600;color:var(--navy);margin-bottom:.5rem">🌐 Audit GEO — Visibilité de Gedeon Richter dans les moteurs IA</p>
+      <div class="gauge-row"><span class="gauge-label">ChatGPT</span><div class="gauge-bar"><div class="gauge-fill" style="width:15%;background:var(--red)"></div></div><span class="gauge-val" style="color:var(--red)">15%</span></div>
+      <div class="gauge-row"><span class="gauge-label">Perplexity</span><div class="gauge-bar"><div class="gauge-fill" style="width:22%;background:var(--amber)"></div></div><span class="gauge-val" style="color:var(--amber)">22%</span></div>
+      <div class="gauge-row"><span class="gauge-label">Gemini</span><div class="gauge-bar"><div class="gauge-fill" style="width:8%;background:var(--red)"></div></div><span class="gauge-val" style="color:var(--red)">8%</span></div>
+      <div class="gauge-row"><span class="gauge-label">Claude</span><div class="gauge-bar"><div class="gauge-fill" style="width:18%;background:var(--red)"></div></div><span class="gauge-val" style="color:var(--red)">18%</span></div>
+      <div class="gauge-row"><span class="gauge-label">Google SEO</span><div class="gauge-bar"><div class="gauge-fill" style="width:31%;background:var(--amber)"></div></div><span class="gauge-val" style="color:var(--amber)">31%</span></div>
+      <p style="font-size:.78rem;color:var(--gray500);margin-top:.75rem">📉 Gedeon Richter est cité dans <strong>15%</strong> des requêtes contraception sur les moteurs IA (vs. Bayer 62%, Organon 45%). Le principal levier : <strong>publier des articles médicaux SEO/GEO optimisés</strong> sur le blog (actuellement inexistant) et structurer les données pour l'extraction IA.</p>
+    </div>
+  `;
+}
+
+// ═══════════════ VOICE OF CUSTOMER ═══════════════
+async function runVocDemo() {
+  const el = document.getElementById('voc-results');
+  typing(el);
+  await delay(2000);
+  
+  el.innerHTML = `
+    <div class="fade-up">
+      <div class="card-grid">
+        <div class="card"><div class="num">147</div><div class="lbl">CR analysés</div></div>
+        <div class="card"><div class="num">89</div><div class="lbl">Verbatims extraits</div></div>
+        <div class="card"><div class="num" style="color:var(--green)">62%</div><div class="lbl">Sentiment positif</div></div>
+        <div class="card"><div class="num" style="color:var(--red)">14%</div><div class="lbl">Objections fortes</div></div>
+      </div>
+      
+      <h4 style="font-size:.82rem;font-weight:700;color:var(--navy);margin:.75rem 0 .5rem">🔝 Top objections récurrentes</h4>
+      <div class="gauge-row"><span class="gauge-label" style="width:160px">« Peur des hormones »</span><div class="gauge-bar"><div class="gauge-fill" style="width:68%;background:var(--red)"></div></div><span class="gauge-val">34×</span></div>
+      <div class="gauge-row"><span class="gauge-label" style="width:160px">« Prix trop élevé »</span><div class="gauge-bar"><div class="gauge-fill" style="width:42%;background:var(--amber)"></div></div><span class="gauge-val">21×</span></div>
+      <div class="gauge-row"><span class="gauge-label" style="width:160px">« Préfère le DIU cuivre »</span><div class="gauge-bar"><div class="gauge-fill" style="width:30%;background:var(--amber)"></div></div><span class="gauge-val">15×</span></div>
+      <div class="gauge-row"><span class="gauge-label" style="width:160px">« Manque de données »</span><div class="gauge-bar"><div class="gauge-fill" style="width:20%;background:var(--blue)"></div></div><span class="gauge-val">10×</span></div>
+      
+      <h4 style="font-size:.82rem;font-weight:700;color:var(--navy);margin:1rem 0 .5rem">💬 Verbatims clés</h4>
+      <div style="display:flex;flex-direction:column;gap:.5rem">
+        <div style="background:var(--gray100);border-radius:8px;padding:.65rem;font-size:.8rem;color:var(--gray700);border-left:3px solid var(--red)">
+          <em>« Le gynécologue m'a dit que ses patientes sont de plus en plus réticentes aux hormones, il demande des données de tolérance long terme. »</em>
+          <div style="font-size:.68rem;color:var(--gray500);margin-top:.25rem">VM S. Martin — Dr. Lefèvre (Paris 15e) — Gynécologue</div>
+        </div>
+        <div style="background:var(--gray100);border-radius:8px;padding:.65rem;font-size:.8rem;color:var(--gray700);border-left:3px solid var(--green)">
+          <em>« Très bon retour sur Slinda® : la patiente apprécie l'absence de règles. Le médecin envisage de switcher d'autres patientes. »</em>
+          <div style="font-size:.68rem;color:var(--gray500);margin-top:.25rem">VM C. Duval — Dr. Moreau (Lyon 3e) — Gynécologue</div>
+        </div>
+        <div style="background:var(--gray100);border-radius:8px;padding:.65rem;font-size:.8rem;color:var(--gray700);border-left:3px solid var(--amber)">
+          <em>« Le médecin ne connaît pas bien notre gamme fertilité. Il prescrit surtout Merck. Opportunité de formation ciblée. »</em>
+          <div style="font-size:.68rem;color:var(--gray500);margin-top:.25rem">VM A. Lopez — Dr. Bernard (Marseille) — Endocrinologue</div>
+        </div>
+      </div>
+      
+      <p style="font-size:.78rem;color:var(--gray500);margin-top:.75rem">🎯 <strong>Signal faible :</strong> +40% de mentions « hormonophobie » vs. semaine précédente. Alerte transmise au marketing.</p>
+    </div>
+  `;
+}
+
+// ═══════════════ OPTIMISATION OPT-IN ═══════════════
+async function runOptinDemo(vm) {
+  const el = document.getElementById('optin-results');
+  typing(el);
+  await delay(1500);
+  
+  const data = {
+    Martin: [
+      { nom: 'Dr. Sophie Lefèvre', spec: 'Gynécologue', score: 92, signal: 'RDV congrès CNGOF en mai', arg: 'Proposer inscription newsletter lors du stand Gedeon Richter au congrès' },
+      { nom: 'Dr. Marc Dupont', spec: 'Généraliste', score: 85, signal: '8 visites VM en 12 mois, prescrit Slinda®', arg: 'Mettre en avant l'accès au contenu médical exclusif post-opt-in' },
+      { nom: 'Dr. Nadia Khelif', spec: 'Gynécologue', score: 78, signal: 'Forte prescriptrice endométriose', arg: 'Inviter à un webinar expert sur les nouvelles données Ryeqo®' },
+    ],
+    Duval: [
+      { nom: 'Dr. Jean Moreau', spec: 'Gynécologue', score: 88, signal: 'Demande régulière d'études', arg: 'Proposer l'accès aux publications via l'espace HCP digital' },
+      { nom: 'Dr. Claire Petit', spec: 'Sage-femme', score: 82, signal: 'Visite VM mensuelle, jamais sollicitée', arg: 'Approche terrain avec tablette — signature opt-in simplifiée' },
+      { nom: 'Dr. Omar Benali', spec: 'Endocrinologue', score: 74, signal: 'Événement fertilité Q2 dans sa ville', arg: 'Invitation personnalisée à l'événement + collecte QR code' },
+    ],
+    Lopez: [
+      { nom: 'Dr. Paul Bernard', spec: 'Endocrinologue', score: 90, signal: 'Top prescripteur fertilité, pas encore opt-in', arg: 'Appel prioritaire — accès early aux résultats d'études Phase 3' },
+      { nom: 'Dr. Anne Roux', spec: 'Gynécologue', score: 79, signal: 'Nouvellement installée, 0 contact digital', arg: 'Kit de bienvenue + présentation gamme lors de la 1ère visite' },
+      { nom: 'Dr. Karim Hadj', spec: 'Généraliste', score: 71, signal: 'Prescrit contraception mais pas nos produits', arg: 'Positionnement différenciant Slinda® vs. concurrence lors de la visite' },
+    ]
+  };
+  
+  const docs = data[vm];
+  el.innerHTML = `
+    <div class="fade-up">
+      <p style="font-size:.78rem;font-weight:600;color:var(--navy);margin-bottom:.5rem">📋 Liste priorisée pour VM — ${vm === 'Martin' ? 'S. Martin' : vm === 'Duval' ? 'C. Duval' : 'A. Lopez'}</p>
+      ${docs.map((d, i) => `
+        <div style="background:var(--white);border:1px solid var(--gray200);border-radius:8px;padding:.75rem;margin-bottom:.5rem;border-left:3px solid ${d.score >= 85 ? 'var(--green)' : d.score >= 75 ? 'var(--amber)' : 'var(--blue)'}">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.35rem">
+            <strong style="font-size:.85rem;color:var(--navy)">#${i+1} — ${d.nom}</strong>
+            <span style="background:${d.score >= 85 ? 'var(--green)' : d.score >= 75 ? 'var(--amber)' : 'var(--blue)'};color:var(--white);padding:2px 8px;border-radius:10px;font-size:.72rem;font-weight:700">${d.score}%</span>
+          </div>
+          <p style="font-size:.75rem;color:var(--gray500);margin-bottom:.35rem">${d.spec} · Signal : ${d.signal}</p>
+          <p style="font-size:.78rem;color:var(--gray700)">💡 <strong>Argumentaire :</strong> ${d.arg}</p>
+        </div>
+      `).join('')}
+      <div class="card-grid" style="margin-top:.75rem">
+        <div class="card"><div class="num" style="color:var(--navy)">29%</div><div class="lbl">Taux actuel</div></div>
+        <div class="card"><div class="num" style="color:var(--green)">52%</div><div class="lbl">Cible à 6 mois</div></div>
+      </div>
+    </div>
+  `;
+}
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
